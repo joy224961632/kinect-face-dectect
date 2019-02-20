@@ -4,11 +4,14 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 
+
 namespace KinectFloor
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
+
     public partial class MainWindow : Window
     {
         private KinectSensor _sensor = null;
@@ -55,7 +58,7 @@ namespace KinectFloor
                         TblDistance.Text = distance.ToString("N2");
 
                         Canvas.SetLeft(ImgHand, wrist2D.X - ImgHand.Width / 2.0);
-                        Canvas.Sethead(Imghead, wrist2D.Y - ImgHand.Height / 2.0);
+                        Canvas.SetHead(ImgHand, wrist2D.Y - ImgHand.Height / 2.0);
                         Canvas.SetLeft(ImgFloor, wrist2D.X - ImgFloor.Width / 2.0);
                         Canvas.SetTop(ImgFloor, floorY - ImgFloor.Height / 2.0);
                     }
