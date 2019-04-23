@@ -16,14 +16,23 @@
             <TextBlock Foreground="White" Margin="10" HorizontalAlignment="Right">
                 Distance: <Run x:Name="TblDistance" />m
             </TextBlock>
+            <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Height="20" Margin="219,5,0,0" VerticalAlignment="Top" Width="111" Click="Button_Click"/>
         </Grid>
-        <Viewbox Grid.Row="1">
-            <Grid Width="512" Height="424">
-                <Image Name="Camera" />
-                <Canvas>
+        <Viewbox Grid.Row="1" Panel.ZIndex="-1">
+            <Grid Width="0" Height="0">
+                <Image Name="Camera"/>
+                <Canvas >
                     <Image Name="ImgHand" Source="/Hud.png" Stretch="Uniform" Width="40" Height="40" />
                     <Image Name="ImgFloor" Source="/Hud.png" Stretch="Fill" Width="100" Height="40" />
                 </Canvas>
+            </Grid>
+        </Viewbox>
+        <Viewbox Grid.Row="1" Panel.ZIndex="1">
+            <Grid Width="512" Height="424">
+                <!--camera 彩色影像-->
+                <Image x:Name="image" Panel.ZIndex="100" />
+                <Image x:Name="background" Source="/background.jpg"  Stretch="Fill" Width="auto" Height="auto" Panel.ZIndex="20" />
+
             </Grid>
         </Viewbox>
     </Grid>

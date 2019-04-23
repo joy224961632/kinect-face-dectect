@@ -74,6 +74,10 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Properties\FaceFrameFeatures.cs" />
+    <Compile Include="Properties\FaceFrameReader.cs" />
+    <Compile Include="Properties\FaceFrameResult.cs" />
+    <Compile Include="Properties\FaceFrameSource.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
