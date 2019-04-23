@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media.Media3D;
-using Microsoft.Kinect.Face;
+//using Microsoft.Kinect.Face;
 
 namespace KinectFloor
 {
@@ -118,7 +118,7 @@ namespace KinectFloor
         /// <summary>
         /// Face frame sources
         /// </summary>
-        private FaceFrameSource[] faceFrameSources = null;
+        /*private FaceFrameSource[] faceFrameSources = null;
 
         /// <summary>
         /// Face frame readers
@@ -129,7 +129,7 @@ namespace KinectFloor
         /// Storage for face frame results
         /// </summary>
         private FaceFrameResult[] faceFrameResults = null;
-
+        */
         /// <summary>
         /// Width of display (color space)
         /// </summary>
@@ -187,14 +187,14 @@ namespace KinectFloor
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
 
             // wire handler for body frame arrival
-            this.bodyFrameReader.FrameArrived += this.Reader_BodyFrameArrived;
+            //this.bodyFrameReader.FrameArrived += this.Reader_BodyFrameArrived;
 
             // set the maximum number of bodies that would be tracked by Kinect
             this.bodyCount = this.kinectSensor.BodyFrameSource.BodyCount;
 
             // allocate storage to store body objects
             this.bodies = new Body[this.bodyCount];
-
+            /*
             // specify the required face frame results
             FaceFrameFeatures faceFrameFeatures =
                 FaceFrameFeatures.BoundingBoxInColorSpace
@@ -208,7 +208,7 @@ namespace KinectFloor
                 | FaceFrameFeatures.LookingAway
                 | FaceFrameFeatures.MouthMoved
                 | FaceFrameFeatures.MouthOpen;
-
+                
             // create a face frame source + reader to track each face in the FOV
             this.faceFrameSources = new FaceFrameSource[this.bodyCount];
             this.faceFrameReaders = new FaceFrameReader[this.bodyCount];
@@ -220,10 +220,10 @@ namespace KinectFloor
                 // open the corresponding reader
                 this.faceFrameReaders[i] = this.faceFrameSources[i].OpenReader();
             }
-
+            
             // allocate storage to store face frame results for each face in the FOV
             this.faceFrameResults = new FaceFrameResult[this.bodyCount];
-
+            */
             // populate face result colors - one for each face index
             this.faceBrush = new List<Brush>()
             {
@@ -306,8 +306,12 @@ namespace KinectFloor
         }
 
 
+
+/*
         private void Reader_BodyFrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
+
+
             using (var bodyFrame = e.FrameReference.AcquireFrame())
             {
                 if (bodyFrame != null)
@@ -448,7 +452,9 @@ namespace KinectFloor
         /// <param name="faceIndex">the index of the face frame corresponding to a specific body in the FOV</param>
         /// <param name="faceTextLayout">the text layout position in screen space</param>
         /// <returns>success or failure</returns>
-        private bool GetFaceTextPositionInColorSpace(int faceIndex, out Point faceTextLayout)
+    */    
+    
+    private bool GetFaceTextPositionInColorSpace(int faceIndex, out Point faceTextLayout)
         {
             faceTextLayout = new Point();
             bool isLayoutValid = false;
@@ -474,7 +480,7 @@ namespace KinectFloor
 
             return isLayoutValid;
         }
-
+        
         private static void ExtractFaceRotationInDegrees(Vector4 rotQuaternion, out int pitch, out int yaw, out int roll)
         {
             double x = rotQuaternion.X;
@@ -494,7 +500,7 @@ namespace KinectFloor
             yaw = (int)(Math.Floor((yawD + ((increment / 2.0) * (yawD > 0 ? 1.0 : -1.0))) / increment) * increment);
             roll = (int)(Math.Floor((rollD + ((increment / 2.0) * (rollD > 0 ? 1.0 : -1.0))) / increment) * increment);
         }
-
+        
         private void BodyReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
             using (BodyFrame frame = e.FrameReference.AcquireFrame())
@@ -547,15 +553,11 @@ namespace KinectFloor
             using (ColorFrame cf = e.FrameReference.AcquireFrame())
 
             {
-
                 if (cf == null) return;
 
                 cf.CopyConvertedFrameDataToArray(colorData, format);
 
                 var fd = cf.FrameDescription;
-
-
-
                 // Creating BitmapSource
 
                 var bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel) / 8;
@@ -565,15 +567,9 @@ namespace KinectFloor
 
 
                 bmpSource = BitmapSource.Create(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null, colorData, stride);
-
-
-
                 // WritableBitmap to show on UI
-
                 wbmp = new WriteableBitmap(bmpSource);
-
                 image.Source = wbmp;
-
             }
 
         }
