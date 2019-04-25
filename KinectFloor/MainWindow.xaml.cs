@@ -20,10 +20,7 @@ namespace KinectFloor
     /// </summary>
     public partial class MainWindow : Window,INotifyPropertyChanged
     {
-        int BigPeople = 0;
-        int SmallPeople = 0;
         double text;
-        int cache = 0;
         private KinectSensor _sensor = null;
         private DepthFrameReader _depthReader = null;
         private BodyFrameReader _bodyReader = null;
@@ -519,7 +516,7 @@ namespace KinectFloor
                         Point wrist2D = wrist3D.ToPoint();
                         double distance = _floor.DistanceFrom(wrist3D);
                         text = Convert.ToDouble(distance.ToString("N2"));
-                        double Height_compair = text;
+
                         // 調整誤差值
                         text += 0.16;
                         int floorY = _floor.FloorY((int)wrist2D.X, (ushort)(wrist3D.Z * 1000));
@@ -529,40 +526,11 @@ namespace KinectFloor
                         Canvas.SetTop(ImgHand, wrist2D.Y - ImgHand.Height / 2.0);
                         Canvas.SetLeft(ImgFloor, wrist2D.X - ImgFloor.Width / 2.0);
                         Canvas.SetTop(ImgFloor, floorY - ImgFloor.Height / 2.0);
-
-                        if (Height_compair > 1.6) {
-                            if(cache+0.05 > Height_compair && cache-0.05 < Height_compair)
-                            {
-
-                            }
-                            else
-                            {
-                                BigPeople += 1;
-                                textBlock2.Text = Convert.ToString(BigPeople);
-                            }
-                        }
-                        else
-                        {
-                            if (cache + 0.05 > Height_compair && cache - 0.05 < Height_compair)
-                            {
-
-                            }
-                            else
-                            {
-                                SmallPeople += 1;
-                                textBlock1.Text = Convert.ToString(SmallPeople);
-                            }
-
-
-                        }
                     }
                 }
             }
         }
-        private void DectectHeight(object sender, DepthFrameArrivedEventArgs e)
-        {
 
-        }
         private void DepthReader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
         {
             using (DepthFrame frame = e.FrameReference.AcquireFrame())
