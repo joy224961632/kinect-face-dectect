@@ -570,6 +570,7 @@ namespace KinectFloor
                 // WritableBitmap to show on UI
                 wbmp = new WriteableBitmap(bmpSource);
                 image.Source = wbmp;
+              //  image1.Source = People.png
             }
 
         }
