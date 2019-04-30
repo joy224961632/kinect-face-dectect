@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media.Media3D;
+using System.Threading;
 //using Microsoft.Kinect.Face;
 
 namespace KinectFloor
@@ -19,7 +20,7 @@ namespace KinectFloor
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window,INotifyPropertyChanged
-    {
+    { double cache;
         double text;
         private KinectSensor _sensor = null;
         private DepthFrameReader _depthReader = null;
@@ -35,19 +36,11 @@ namespace KinectFloor
         private Floor _floor = null;
 
         /// <summary>
-        /// Thickness of face bounding box and face points
-        /// </summary>
-        private const double DrawFaceShapeThickness = 8;
-
-        /// <summary>
         /// Font size of face property text 
         /// </summary>
         private const double DrawTextFontSize = 30;
-
-        /// <summary>
-        /// Radius of face point circle
-        /// </summary>
-        private const double FacePointRadius = 1.0;
+        private double T = 0;
+    
 
         /// <summary>
         /// Text layout offset in X axis
@@ -59,21 +52,6 @@ namespace KinectFloor
         /// </summary>
         private const float TextLayoutOffsetY = -0.15f;
 
-        /// <summary>
-        /// Face rotation display angle increment in degrees
-        /// </summary>
-        private const double FaceRotationIncrementInDegrees = 5.0;
-
-        /// <summary>
-        /// Formatted text to indicate that there are no bodies/faces tracked in the FOV
-        /// </summary>
-        private FormattedText textFaceNotTracked = new FormattedText(
-                        "No bodies or faces are tracked ...",
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Georgia"),
-                        DrawTextFontSize,
-                        Brushes.White);
 
         /// <summary>
         /// Text layout for the no face tracked message
@@ -115,24 +93,7 @@ namespace KinectFloor
         /// </summary>
         private int bodyCount;
 
-        /// <summary>
-        /// Face frame sources
-        /// </summary>
-        /*private FaceFrameSource[] faceFrameSources = null;
-
-        /// <summary>
-        /// Face frame readers
-        /// </summary>
-        private FaceFrameReader[] faceFrameReaders = null;
-
-        /// <summary>
-        /// Storage for face frame results
-        /// </summary>
-        private FaceFrameResult[] faceFrameResults = null;
-        */
-        /// <summary>
-        /// Width of display (color space)
-        /// </summary>
+    
         private int displayWidth;
 
         /// <summary>
@@ -160,7 +121,6 @@ namespace KinectFloor
         public MainWindow()
         {
             InitializeComponent();
-
 
 
             _sensor = KinectSensor.GetDefault();
@@ -304,156 +264,7 @@ namespace KinectFloor
                 }
             }
         }
-
-
-
-/*
-        private void Reader_BodyFrameArrived(object sender, BodyFrameArrivedEventArgs e)
-        {
-
-
-            using (var bodyFrame = e.FrameReference.AcquireFrame())
-            {
-                if (bodyFrame != null)
-                {
-                    // update body data
-                    bodyFrame.GetAndRefreshBodyData(this.bodies);
-
-                    using (DrawingContext dc = this.drawingGroup.Open())
-                    {
-                        // draw the dark background
-                        dc.DrawRectangle(Brushes.Black, null, this.displayRect);
-
-                        bool drawFaceResult = false;
-
-                        // iterate through each face source
-                        for (int i = 0; i < this.bodyCount; i++)
-                        {
-                            // check if a valid face is tracked in this face source
-                            if (this.faceFrameSources[i].IsTrackingIdValid)
-                            {
-                                // check if we have valid face frame results
-                                if (this.faceFrameResults[i] != null)
-                                {
-                                    // draw face frame results
-                                    this.DrawFaceFrameResults(i, this.faceFrameResults[i], dc);
-
-                                    if (!drawFaceResult)
-                                    {
-                                        drawFaceResult = true;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // check if the corresponding body is tracked 
-                                if (this.bodies[i].IsTracked)
-                                {
-                                    // update the face frame source to track this body
-                                    this.faceFrameSources[i].TrackingId = this.bodies[i].TrackingId;
-                                }
-                            }
-                        }
-
-                        if (!drawFaceResult)
-                        {
-                            // if no faces were drawn then this indicates one of the following:
-                            // a body was not tracked 
-                            // a body was tracked but the corresponding face was not tracked
-                            // a body and the corresponding face was tracked though the face box or the face points were not valid
-                            dc.DrawText(
-                                this.textFaceNotTracked,
-                                this.textLayoutFaceNotTracked);
-                        }
-
-                        this.drawingGroup.ClipGeometry = new RectangleGeometry(this.displayRect);
-                    }
-                }
-            }
-        }
-
-        private void DrawFaceFrameResults(int faceIndex, FaceFrameResult faceResult, DrawingContext drawingContext)
-        {
-            // choose the brush based on the face index
-            Brush drawingBrush = this.faceBrush[0];
-            if (faceIndex < this.bodyCount)
-            {
-                drawingBrush = this.faceBrush[faceIndex];
-            }
-
-            Pen drawingPen = new Pen(drawingBrush, DrawFaceShapeThickness);
-
-            // draw the face bounding box
-            var faceBoxSource = faceResult.FaceBoundingBoxInColorSpace;
-            Rect faceBox = new Rect(faceBoxSource.Left, faceBoxSource.Top, faceBoxSource.Right - faceBoxSource.Left, faceBoxSource.Bottom - faceBoxSource.Top);
-            drawingContext.DrawRectangle(null, drawingPen, faceBox);
-
-            if (faceResult.FacePointsInColorSpace != null)
-            {
-                // draw each face point
-                foreach (PointF pointF in faceResult.FacePointsInColorSpace.Values)
-                {
-                    drawingContext.DrawEllipse(null, drawingPen, new Point(pointF.X, pointF.Y), FacePointRadius, FacePointRadius);
-                }
-            }
-
-            string faceText = string.Empty;
-
-            // extract each face property information and store it in faceText
-            if (faceResult.FaceProperties != null)
-            {
-                foreach (var item in faceResult.FaceProperties)
-                {
-                    faceText += item.Key.ToString() + " : ";
-
-                    // consider a "maybe" as a "no" to restrict 
-                    // the detection result refresh rate
-                    if (item.Value == DetectionResult.Maybe)
-                    {
-                        faceText += DetectionResult.No + "\n";
-                    }
-                    else
-                    {
-                        faceText += item.Value.ToString() + "\n";
-                    }
-                }
-            }
-
-            // extract face rotation in degrees as Euler angles
-            if (faceResult.FaceRotationQuaternion != null)
-            {
-                int pitch, yaw, roll;
-                ExtractFaceRotationInDegrees(faceResult.FaceRotationQuaternion, out pitch, out yaw, out roll);
-                faceText += "FaceYaw : " + yaw + "\n" +
-                            "FacePitch : " + pitch + "\n" +
-                            "FacenRoll : " + roll + "\n";
-            }
-
-            // render the face property and face rotation information
-            Point faceTextLayout;
-            if (this.GetFaceTextPositionInColorSpace(faceIndex, out faceTextLayout))
-            {
-                drawingContext.DrawText(
-                        new FormattedText(
-                            faceText,
-                            CultureInfo.GetCultureInfo("en-us"),
-                            FlowDirection.LeftToRight,
-                            new Typeface("Georgia"),
-                            DrawTextFontSize,
-                            drawingBrush),
-                        faceTextLayout);
-            }
-        }
-
-        /// <summary>
-        /// Computes the face result text position by adding an offset to the corresponding 
-        /// body's head joint in camera space and then by projecting it to screen space
-        /// </summary>
-        /// <param name="faceIndex">the index of the face frame corresponding to a specific body in the FOV</param>
-        /// <param name="faceTextLayout">the text layout position in screen space</param>
-        /// <returns>success or failure</returns>
-    */    
-    
+        
     private bool GetFaceTextPositionInColorSpace(int faceIndex, out Point faceTextLayout)
         {
             faceTextLayout = new Point();
@@ -481,26 +292,8 @@ namespace KinectFloor
             return isLayoutValid;
         }
         
-        private static void ExtractFaceRotationInDegrees(Vector4 rotQuaternion, out int pitch, out int yaw, out int roll)
-        {
-            double x = rotQuaternion.X;
-            double y = rotQuaternion.Y;
-            double z = rotQuaternion.Z;
-            double w = rotQuaternion.W;
-
-            // convert face rotation quaternion to Euler angles in degrees
-            double yawD, pitchD, rollD;
-            pitchD = Math.Atan2(2 * ((y * z) + (w * x)), (w * w) - (x * x) - (y * y) + (z * z)) / Math.PI * 180.0;
-            yawD = Math.Asin(2 * ((w * y) - (x * z))) / Math.PI * 180.0;
-            rollD = Math.Atan2(2 * ((x * y) + (w * z)), (w * w) + (x * x) - (y * y) - (z * z)) / Math.PI * 180.0;
-
-            // clamp the values to a multiple of the specified increment to control the refresh rate
-            double increment = FaceRotationIncrementInDegrees;
-            pitch = (int)(Math.Floor((pitchD + ((increment / 2.0) * (pitchD > 0 ? 1.0 : -1.0))) / increment) * increment);
-            yaw = (int)(Math.Floor((yawD + ((increment / 2.0) * (yawD > 0 ? 1.0 : -1.0))) / increment) * increment);
-            roll = (int)(Math.Floor((rollD + ((increment / 2.0) * (rollD > 0 ? 1.0 : -1.0))) / increment) * increment);
-        }
-        
+        int a = 0;
+        int b = 0;
         private void BodyReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
             using (BodyFrame frame = e.FrameReference.AcquireFrame())
@@ -512,6 +305,7 @@ namespace KinectFloor
 
                     if (_floor != null && _body != null)
                     {
+                        
                         CameraSpacePoint wrist3D = _body.Joints[JointType.Head].Position;
                         Point wrist2D = wrist3D.ToPoint();
                         double distance = _floor.DistanceFrom(wrist3D);
@@ -519,13 +313,47 @@ namespace KinectFloor
 
                         // 調整誤差值
                         text += 0.16;
+                        if (T == 0)
+                        {
+                            cache = text;
+                        }
                         int floorY = _floor.FloorY((int)wrist2D.X, (ushort)(wrist3D.Z * 1000));
-
+                        Cache.Text = Convert.ToString(cache);
                         TblDistance.Text = Convert.ToString(text);
                         Canvas.SetLeft(ImgHand, wrist2D.X - ImgHand.Width / 2.0);
                         Canvas.SetTop(ImgHand, wrist2D.Y - ImgHand.Height / 2.0);
                         Canvas.SetLeft(ImgFloor, wrist2D.X - ImgFloor.Width / 2.0);
                         Canvas.SetTop(ImgFloor, floorY - ImgFloor.Height / 2.0);
+                        /*if (cache > text-0.05 && cache < text + 0.5)
+                        {
+
+                        }*/
+                        //                        else
+                        //                      {
+                        
+                        if (cache > 1.6)
+                        {
+                            if (T == 0) {
+                                a += 1;
+                                textBlock1.Text = Convert.ToString(a);
+                                T = 1;
+                                distance = 0;
+                            }
+                        }
+                        else if (cache < 1.6 && T == 0 && text !=0)
+                        {
+                            b += 1;
+                            textBlock2.Text = Convert.ToString(b);
+                        }
+                        if (cache - 0.2 > text)
+                        {
+                            Thread.Sleep(1500);
+                            T = 0;
+                            cache = 0;
+                            text = 0;
+                            
+                        }
+                        //                    }
                     }
                 }
             }
