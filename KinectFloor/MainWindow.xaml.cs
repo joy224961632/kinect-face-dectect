@@ -312,7 +312,7 @@ namespace KinectFloor
                         text = Convert.ToDouble(distance.ToString("N2"));
 
                         // 調整誤差值
-                        text += 0.16;
+                        text += 0.18;
                         if (T == 0)
                         {
                             cache = text;
@@ -324,34 +324,41 @@ namespace KinectFloor
                         Canvas.SetTop(ImgHand, wrist2D.Y - ImgHand.Height / 2.0);
                         Canvas.SetLeft(ImgFloor, wrist2D.X - ImgFloor.Width / 2.0);
                         Canvas.SetTop(ImgFloor, floorY - ImgFloor.Height / 2.0);
-                        /*if (cache > text-0.05 && cache < text + 0.5)
-                        {
-
-                        }*/
-                        //                        else
-                        //                      {
                         
                         if (cache > 1.6)
                         {
                             if (T == 0) {
                                 a += 1;
-                                textBlock1.Text = Convert.ToString(a);
                                 T = 1;
                                 distance = 0;
                             }
                         }
-                        else if (cache < 1.6 && T == 0 && text !=0)
+                        if (cache < 1.6 &&cache >1.3&& T == 0 && text !=0)
                         {
+                            T += 1;
                             b += 1;
                             textBlock2.Text = Convert.ToString(b);
                         }
-                        if (cache - 0.2 > text)
+                        if (cache - 0.15 > text)
                         {
-                            Thread.Sleep(1500);
+                            //wrist3D = ;
                             T = 0;
                             cache = 0;
                             text = 0;
-                            
+                            distance = 0;
+                            Thread.Sleep(2000);
+                            //_body = null;
+                            //_floor = null;
+                        }
+                        int cc = 0;
+                        if(T == 1)
+                        {
+                            if (cc ==0)
+                            {
+                                textBlock1.Text = Convert.ToString(a);
+
+                            }
+
                         }
                         //                    }
                     }

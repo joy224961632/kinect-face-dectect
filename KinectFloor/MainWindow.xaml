@@ -19,7 +19,7 @@
                 Cache: <Run x:Name="Cache" />值
             
             </TextBlock>
-            <Button x:Name="button" Content="Button" HorizontalAlignment="Left" Height="20" Margin="219,5,0,0" VerticalAlignment="Top" Width="111" Click="Button_Click"/>
+            <Button x:Name="button" Content="拍照" HorizontalAlignment="Left" Height="20" Margin="219,5,0,0" VerticalAlignment="Top" Width="111" Click="Button_Click"/>
         </Grid>
         <Viewbox Grid.Row="1" Panel.ZIndex="-1">
             <Grid Width="0" Height="0">
