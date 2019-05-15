@@ -330,7 +330,21 @@ namespace KinectFloor
                             if (T == 0) {
                                 a += 1;
                                 T = 1;
-                                distance = 0;
+                                // distance = 0;
+
+                                //Take Picture
+                                if (this.wbmp != null)
+                                {
+                                    // create a png bitmap encoder which knows how to save a .png file
+                                    BitmapEncoder encoder = new PngBitmapEncoder();
+                                    // create frame from the writable bitmap and add to encoder
+                                    encoder.Frames.Add(BitmapFrame.Create(this.wbmp));
+                                    string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                                    string path = Path.Combine(myPhotos, "Upload" + ".png");
+                                    // FileStream is IDisposable
+                                    using (FileStream fs = new FileStream(path, FileMode.Create))
+                                    { encoder.Save(fs); }
+                                }
                             }
                         }
                         if (cache < 1.6 &&cache >1.3&& T == 0 && text !=0)
@@ -338,6 +352,21 @@ namespace KinectFloor
                             T += 1;
                             b += 1;
                             textBlock2.Text = Convert.ToString(b);
+                            //Take Pictures
+
+                            //Take Picture
+                            if (this.wbmp != null)
+                            {
+                                // create a png bitmap encoder which knows how to save a .png file
+                                BitmapEncoder encoder = new PngBitmapEncoder();
+                                // create frame from the writable bitmap and add to encoder
+                                encoder.Frames.Add(BitmapFrame.Create(this.wbmp));
+                                string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                                string path = Path.Combine(myPhotos, "Upload" + ".png");
+                                // FileStream is IDisposable
+                                using (FileStream fs = new FileStream(path, FileMode.Create))
+                                { encoder.Save(fs); }
+                            }
                         }
                         if (cache - 0.15 > text)
                         {
@@ -389,18 +418,11 @@ namespace KinectFloor
 
             {
                 if (cf == null) return;
-
                 cf.CopyConvertedFrameDataToArray(colorData, format);
-
                 var fd = cf.FrameDescription;
                 // Creating BitmapSource
-
                 var bytesPerPixel = (PixelFormats.Bgr32.BitsPerPixel) / 8;
-
                 var stride = bytesPerPixel * cf.FrameDescription.Width;
-
-
-
                 bmpSource = BitmapSource.Create(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null, colorData, stride);
                 // WritableBitmap to show on UI
                 wbmp = new WriteableBitmap(bmpSource);
@@ -459,7 +481,7 @@ namespace KinectFloor
 
 
 
-                string path = Path.Combine(myPhotos, "KinectScreenshot-Color-" + ".png");
+                string path = Path.Combine(myPhotos, "Upload" + ".png");
 
 
 
