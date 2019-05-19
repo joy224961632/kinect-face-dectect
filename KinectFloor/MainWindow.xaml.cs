@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Media.Media3D;
 using System.Threading;
+
 //using Microsoft.Kinect.Face;
 
 namespace KinectFloor
@@ -137,53 +138,22 @@ namespace KinectFloor
 
             // get the color frame details
             FrameDescription frameDescription = this.kinectSensor.ColorFrameSource.FrameDescription;
-
+            
             // set the display specifics
             this.displayWidth = frameDescription.Width;
             this.displayHeight = frameDescription.Height;
             this.displayRect = new Rect(0.0, 0.0, this.displayWidth, this.displayHeight);
-
+            
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
-
-            // wire handler for body frame arrival
-            //this.bodyFrameReader.FrameArrived += this.Reader_BodyFrameArrived;
-
+            
+            
             // set the maximum number of bodies that would be tracked by Kinect
             this.bodyCount = this.kinectSensor.BodyFrameSource.BodyCount;
-
-            // allocate storage to store body objects
-            this.bodies = new Body[this.bodyCount];
-            /*
-            // specify the required face frame results
-            FaceFrameFeatures faceFrameFeatures =
-                FaceFrameFeatures.BoundingBoxInColorSpace
-                | FaceFrameFeatures.PointsInColorSpace
-                | FaceFrameFeatures.RotationOrientation
-                | FaceFrameFeatures.FaceEngagement
-                | FaceFrameFeatures.Glasses
-                | FaceFrameFeatures.Happy
-                | FaceFrameFeatures.LeftEyeClosed
-                | FaceFrameFeatures.RightEyeClosed
-                | FaceFrameFeatures.LookingAway
-                | FaceFrameFeatures.MouthMoved
-                | FaceFrameFeatures.MouthOpen;
-                
-            // create a face frame source + reader to track each face in the FOV
-            this.faceFrameSources = new FaceFrameSource[this.bodyCount];
-            this.faceFrameReaders = new FaceFrameReader[this.bodyCount];
-            for (int i = 0; i < this.bodyCount; i++)
-            {
-                // create the face frame source with the required face frame features and an initial tracking Id of 0
-                this.faceFrameSources[i] = new FaceFrameSource(this.kinectSensor, 0, faceFrameFeatures);
-
-                // open the corresponding reader
-                this.faceFrameReaders[i] = this.faceFrameSources[i].OpenReader();
-            }
             
-            // allocate storage to store face frame results for each face in the FOV
-            this.faceFrameResults = new FaceFrameResult[this.bodyCount];
-            */
+            // allocate storage to store body objects
+            this.bodies = new Body[this.bodyCount];          
+            
             // populate face result colors - one for each face index
             this.faceBrush = new List<Brush>()
             {
@@ -194,33 +164,26 @@ namespace KinectFloor
                 Brushes.LightBlue,
                 Brushes.Yellow
             };
-
+            
             // set IsAvailableChanged event notifier
             this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
-
+            
             // open the sensor
             this.kinectSensor.Open();
-
+            
             // set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.NoSensorStatusText;
-
             // Create the drawing group we'll use for drawing
             this.drawingGroup = new DrawingGroup();
-
+            
             // Create an image source that we can use in our image control
             this.imageSource = new DrawingImage(this.drawingGroup);
-
             // use the window object as the view model in this simple example
             this.DataContext = this;
-
-
-
-
             if (_sensor != null)
             {
                 _sensor.Open();
-
                 _depthReader = _sensor.DepthFrameSource.OpenReader();
                 _depthReader.FrameArrived += DepthReader_FrameArrived;
                 _bodyReader = _sensor.BodyFrameSource.OpenReader();
@@ -228,12 +191,8 @@ namespace KinectFloor
                 cfr = _sensor.ColorFrameSource.OpenReader();
                 cfr.FrameArrived += cfr_FrameArrived;
             }
-
-
-
         }
         public event PropertyChangedEventHandler PropertyChanged;
-
         private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
         {
             if (this.kinectSensor != null)
@@ -249,13 +208,11 @@ namespace KinectFloor
             {
                 return this.statusText;
             }
-
             set
             {
                 if (this.statusText != value)
                 {
                     this.statusText = value;
-
                     // notify any bound elements that the text has changed
                     if (this.PropertyChanged != null)
                     {
@@ -263,10 +220,9 @@ namespace KinectFloor
                     }
                 }
             }
-        }
-        
+        }       
     private bool GetFaceTextPositionInColorSpace(int faceIndex, out Point faceTextLayout)
-        {
+        {          
             faceTextLayout = new Point();
             bool isLayoutValid = false;
 
@@ -274,44 +230,37 @@ namespace KinectFloor
             if (body.IsTracked)
             {
                 var headJoint = body.Joints[JointType.Head].Position;
-
                 CameraSpacePoint textPoint = new CameraSpacePoint()
                 {
                     X = headJoint.X + TextLayoutOffsetX,
                     Y = headJoint.Y + TextLayoutOffsetY,
                     Z = headJoint.Z
                 };
-
                 ColorSpacePoint textPointInColor = this.coordinateMapper.MapCameraPointToColorSpace(textPoint);
-
                 faceTextLayout.X = textPointInColor.X;
                 faceTextLayout.Y = textPointInColor.Y;
                 isLayoutValid = true;
             }
-
             return isLayoutValid;
-        }
-        
-        int a = 0;
-        int b = 0;
+        }              
         private void BodyReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
+            string Stop;
+            int adult = 0;
+            int children = 0;
             using (BodyFrame frame = e.FrameReference.AcquireFrame())
             {
                 if (frame != null)
                 {
                     _floor = frame.Floor();
                     _body = frame.Body();
-
                     if (_floor != null && _body != null)
-                    {
-                        
+                    {                      
                         CameraSpacePoint wrist3D = _body.Joints[JointType.Head].Position;
                         Point wrist2D = wrist3D.ToPoint();
                         double distance = _floor.DistanceFrom(wrist3D);
                         text = Convert.ToDouble(distance.ToString("N2"));
-
-                        // 調整誤差值
+                        //float
                         text += 0.18;
                         if (T == 0)
                         {
@@ -323,14 +272,14 @@ namespace KinectFloor
                         Canvas.SetLeft(ImgHand, wrist2D.X - ImgHand.Width / 2.0);
                         Canvas.SetTop(ImgHand, wrist2D.Y - ImgHand.Height / 2.0);
                         Canvas.SetLeft(ImgFloor, wrist2D.X - ImgFloor.Width / 2.0);
-                        Canvas.SetTop(ImgFloor, floorY - ImgFloor.Height / 2.0);
-                        
+                        Canvas.SetTop(ImgFloor, floorY - ImgFloor.Height / 2.0);                   
                         if (cache > 1.6)
                         {
                             if (T == 0) {
-                                a += 1;
+                                adult += 1;
                                 T = 1;
                                 // distance = 0;
+                                textBlock1.Text = Convert.ToString("成人人數:" + adult);
 
                                 //Take Picture
                                 if (this.wbmp != null)
@@ -346,13 +295,15 @@ namespace KinectFloor
                                     { encoder.Save(fs); }
                                 }
                             }
+                            StreamWriter tall = new StreamWriter(@"C:\Users\user\pictures\tall.txt");
+                            tall.WriteLine(Convert.ToString(cache * 100));
+                            tall.Close();
                         }
-                        if (cache < 1.6 &&cache >1.3&& T == 0 && text !=0)
+                        if (cache < 1.6 &&cache >1.2&& T == 0 && text !=0)
                         {
                             T += 1;
-                            b += 1;
-                            textBlock2.Text = Convert.ToString(b);
-                            //Take Pictures
+                            children += 1;
+                            textBlock2.Text = Convert.ToString("孩童人數::" + children);
 
                             //Take Picture
                             if (this.wbmp != null)
@@ -367,33 +318,62 @@ namespace KinectFloor
                                 using (FileStream fs = new FileStream(path, FileMode.Create))
                                 { encoder.Save(fs); }
                             }
+                            StreamWriter tall = new StreamWriter(@"C:\Users\user\pictures\tall.txt");
+                            tall.WriteLine(Convert.ToString(cache * 100));
+                            tall.Close();
                         }
-                        if (cache - 0.15 > text)
+                        if (cache - 0.06 > text || cache > text-0.2)
                         {
-                            //wrist3D = ;
                             T = 0;
                             cache = 0;
                             text = 0;
                             distance = 0;
                             Thread.Sleep(2000);
-                            //_body = null;
-                            //_floor = null;
-                        }
-                        int cc = 0;
-                        if(T == 1)
-                        {
-                            if (cc ==0)
-                            {
-                                textBlock1.Text = Convert.ToString(a);
-
-                            }
-
-                        }
+                        }                      
                         //                    }
+                        if (adult != 0 || children != 0)
+                        {
+                            textBlock1.Text = Convert.ToString("大人" + adult);
+                            textBlock2.Text = Convert.ToString("小孩:" + children);
+                            
+                        }
                     }
                 }
             }
+
+            //Tall
+            
+
+
+            StreamReader str = new StreamReader(@"C:\Users\user\pictures\status.txt");
+            Stop = str.ReadLine();
+            //ReadLine2 = str.ReadLine();
+            //ReadAll = str.ReadToEnd();
+            str.Close();
+            if (Stop == "Stop")
+            {   
+                
+                if (_depthReader != null)
+                {
+                    _depthReader.Dispose();
+                }
+
+                if (_bodyReader != null)
+                {
+                    _bodyReader.Dispose();
+                }
+
+                if (_sensor != null && _sensor.IsOpen)
+                {
+                    _sensor.Close();
+                }
+                
+                Close();
+            }
+            
         }
+
+        
 
         private void DepthReader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
         {
@@ -409,11 +389,7 @@ namespace KinectFloor
         private void cfr_FrameArrived(object sender, ColorFrameArrivedEventArgs e)
 
         {
-
             if (e.FrameReference == null) return;
-
-
-
             using (ColorFrame cf = e.FrameReference.AcquireFrame())
 
             {
@@ -430,6 +406,18 @@ namespace KinectFloor
               //  image1.Source = People.png
             }
 
+        }
+        private void Stop(object sender, EventArgs e)
+        {
+            // 讀取TXT檔內文串
+            /*
+                StreamReader str = new StreamReader(@"E:\pixnet\20160614\Lab2_TXT_Read_Write\Read.TXT");
+                StreamReader str = new StreamReader(讀取TXT檔路徑)    
+                str.ReadLine(); (一行一行讀取)
+                str.ReadToEnd();(一次讀取全部)
+                str.Close(); (關閉str)
+            */
+            
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
@@ -451,56 +439,29 @@ namespace KinectFloor
         }
 
 
-
-
-
-
-
-
-
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (this.wbmp != null)
 
             {
-
                 // create a png bitmap encoder which knows how to save a .png file
-
                 BitmapEncoder encoder = new PngBitmapEncoder();
-
-
 
                 // create frame from the writable bitmap and add to encoder
 
                 encoder.Frames.Add(BitmapFrame.Create(this.wbmp));
 
-
-
                 string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
 
-
-
                 string path = Path.Combine(myPhotos, "Upload" + ".png");
-
-
-
-
 
                 // FileStream is IDisposable
 
                 using (FileStream fs = new FileStream(path, FileMode.Create))
-
                 {
-
                     encoder.Save(fs);
-
                 }
-
             }
         }
-
-
-
     }
 }
