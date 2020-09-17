@@ -13,12 +13,10 @@
         </Grid.RowDefinitions>
         <Grid Grid.Row="0" Background="Black">
             <TextBlock Foreground="White" Margin="10" HorizontalAlignment="Left" Text="Kinect Floor Detection" />
-            <TextBlock Foreground="White" Margin="10" HorizontalAlignment="Right">
-            Distance: <Run x:Name="TblDistance" />m
-            <TextBlock Foreground="White" Margin="10" HorizontalAlignment="Right"/>
-                Cache: <Run x:Name="Cache" />值
-            
-            </TextBlock>
+            <TextBlock Foreground="White" Margin="0,13,4,7" HorizontalAlignment="Right" Width="537"><Run Text="Distance: "/><Run x:Name="TblDistance"/><Run Text="m "/><InlineUIContainer>
+                    <TextBlock Foreground="White" Margin="10" HorizontalAlignment="Right"/>
+                </InlineUIContainer><Run Text=" Cache: "/><Run x:Name="Cache"/><Run Text="值 "/><Run Text="       "/><Run Text="Row: "/><Run x:Name="Row"/><Run Text="值"/></TextBlock>
+
             <Button x:Name="button" Content="拍照" HorizontalAlignment="Left" Height="20" Margin="219,5,0,0" VerticalAlignment="Top" Width="111" Click="Button_Click"/>
         </Grid>
         <Viewbox Grid.Row="1" Panel.ZIndex="-1" Width="0" Height="0">
@@ -33,16 +31,16 @@
         </Viewbox>
         <Viewbox Grid.Row="1" Panel.ZIndex="1">
             <Grid Width="512" Height="424">
-                
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="253*"/>
                     <ColumnDefinition Width="259*"/>
-                    
+
                 </Grid.ColumnDefinitions>
                 <!--camera 彩色影像-->
 
                 <Image x:Name="image" Panel.ZIndex="1" Grid.ColumnSpan="2" Margin="0,21,0,10"/>
-              
+
             </Grid>
         </Viewbox>
         <TextBlock x:Name="textBlock" HorizontalAlignment="Left" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top"/>

@@ -4,7 +4,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;using System.IO;
+using System.Windows.Media.Imaging;
+using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -41,7 +42,7 @@ namespace KinectFloor
         /// </summary>
         private const double DrawTextFontSize = 30;
         private double T = 0;
-    
+        private double RowData = 0;
 
         /// <summary>
         /// Text layout offset in X axis
@@ -125,9 +126,12 @@ namespace KinectFloor
 
 
             _sensor = KinectSensor.GetDefault();
-            var fd = _sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
-            uint frameSize = fd.BytesPerPixel * fd.LengthInPixels;
-            colorData = new byte[frameSize];
+            var fd = _sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+
+            uint frameSize = fd.BytesPerPixel * fd.LengthInPixels;
+
+            colorData = new byte[frameSize];
+
             format = ColorImageFormat.Bgra;
 
             // one sensor is currently supported
@@ -227,33 +231,38 @@ namespace KinectFloor
             bool isLayoutValid = false;
 
             Body body = this.bodies[faceIndex];
+
+
             if (body.IsTracked)
             {
                 var headJoint = body.Joints[JointType.Head].Position;
                 CameraSpacePoint textPoint = new CameraSpacePoint()
-                {
+                {   
+
                     X = headJoint.X + TextLayoutOffsetX,
                     Y = headJoint.Y + TextLayoutOffsetY,
                     Z = headJoint.Z
+
                 };
                 ColorSpacePoint textPointInColor = this.coordinateMapper.MapCameraPointToColorSpace(textPoint);
                 faceTextLayout.X = textPointInColor.X;
                 faceTextLayout.Y = textPointInColor.Y;
                 isLayoutValid = true;
+                
             }
             return isLayoutValid;
         }              
         private void BodyReader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
-        {
-            string Stop;
+        {           
             int adult = 0;
             int children = 0;
             using (BodyFrame frame = e.FrameReference.AcquireFrame())
-            {
+            {               
                 if (frame != null)
                 {
                     _floor = frame.Floor();
                     _body = frame.Body();
+                    
                     if (_floor != null && _body != null)
                     {                      
                         CameraSpacePoint wrist3D = _body.Joints[JointType.Head].Position;
@@ -267,6 +276,9 @@ namespace KinectFloor
                             cache = text;
                         }
                         int floorY = _floor.FloorY((int)wrist2D.X, (ushort)(wrist3D.Z * 1000));
+
+                        Row.Text = Convert.ToString(wrist2D);
+                        
                         Cache.Text = Convert.ToString(cache);
                         TblDistance.Text = Convert.ToString(text);
                         Canvas.SetLeft(ImgHand, wrist2D.X - ImgHand.Width / 2.0);
@@ -279,7 +291,11 @@ namespace KinectFloor
                                 adult += 1;
                                 T = 1;
                                 // distance = 0;
-                                textBlock1.Text = Convert.ToString("成人人數:" + adult);
+                                //textBlock1.Text = Convert.ToString("成人人數:" + adult);
+                                //IO file
+                                StreamWriter tall = new StreamWriter(@"C:\Users\joy22\Pictures\tall.txt");
+                                tall.WriteLine(Convert.ToString(cache * 100));
+                                tall.Close();
 
                                 //Take Picture
                                 if (this.wbmp != null)
@@ -294,17 +310,16 @@ namespace KinectFloor
                                     using (FileStream fs = new FileStream(path, FileMode.Create))
                                     { encoder.Save(fs); }
                                 }
-                            }
-                            StreamWriter tall = new StreamWriter(@"C:\Users\user\pictures\tall.txt");
+                            }                                                 
+                        }
+                        if (cache < 1.6 && T == 0 && text != 0)
+                        {
+                            T = 1;
+                            children = children + 1;
+                            StreamWriter tall = new StreamWriter(@"C:\Users\joy22\Pictures\tall.txt");
                             tall.WriteLine(Convert.ToString(cache * 100));
                             tall.Close();
-                        }
-                        if (cache < 1.6 &&cache >1.2&& T == 0 && text !=0)
-                        {
-                            T += 1;
-                            children += 1;
-                            textBlock2.Text = Convert.ToString("孩童人數::" + children);
-
+                            //textBlock2.Text = Convert.ToString("孩童人數::" + children);
                             //Take Picture
                             if (this.wbmp != null)
                             {
@@ -317,62 +332,28 @@ namespace KinectFloor
                                 // FileStream is IDisposable
                                 using (FileStream fs = new FileStream(path, FileMode.Create))
                                 { encoder.Save(fs); }
+
                             }
-                            StreamWriter tall = new StreamWriter(@"C:\Users\user\pictures\tall.txt");
-                            tall.WriteLine(Convert.ToString(cache * 100));
-                            tall.Close();
                         }
-                        if (cache - 0.06 > text || cache > text-0.2)
+                        if (((cache - 0.04) > text) || ((cache + 0.04) < text))
                         {
+                            
+                           // textBlock.Text = "m";
                             T = 0;
                             cache = 0;
                             text = 0;
                             distance = 0;
-                            Thread.Sleep(2000);
-                        }                      
-                        //                    }
+                        }
                         if (adult != 0 || children != 0)
                         {
-                            textBlock1.Text = Convert.ToString("大人" + adult);
-                            textBlock2.Text = Convert.ToString("小孩:" + children);
-                            
+                            textBlock1.Text = Convert.ToString("成人人數：" + adult);
+                            textBlock2.Text = Convert.ToString("孩童人數：:" + children);
                         }
                     }
                 }
             }
-
-            //Tall
-            
-
-
-            StreamReader str = new StreamReader(@"C:\Users\user\pictures\status.txt");
-            Stop = str.ReadLine();
-            //ReadLine2 = str.ReadLine();
-            //ReadAll = str.ReadToEnd();
-            str.Close();
-            if (Stop == "Stop")
-            {   
-                
-                if (_depthReader != null)
-                {
-                    _depthReader.Dispose();
-                }
-
-                if (_bodyReader != null)
-                {
-                    _bodyReader.Dispose();
-                }
-
-                if (_sensor != null && _sensor.IsOpen)
-                {
-                    _sensor.Close();
-                }
-                
-                Close();
-            }
-            
+            //Tall                    
         }
-
         
 
         private void DepthReader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
@@ -387,7 +368,6 @@ namespace KinectFloor
         }
 
         private void cfr_FrameArrived(object sender, ColorFrameArrivedEventArgs e)
-
         {
             if (e.FrameReference == null) return;
             using (ColorFrame cf = e.FrameReference.AcquireFrame())
@@ -403,22 +383,11 @@ namespace KinectFloor
                 // WritableBitmap to show on UI
                 wbmp = new WriteableBitmap(bmpSource);
                 image.Source = wbmp;
-              //  image1.Source = People.png
+                //image1.Source = People.png
             }
 
         }
-        private void Stop(object sender, EventArgs e)
-        {
-            // 讀取TXT檔內文串
-            /*
-                StreamReader str = new StreamReader(@"E:\pixnet\20160614\Lab2_TXT_Read_Write\Read.TXT");
-                StreamReader str = new StreamReader(讀取TXT檔路徑)    
-                str.ReadLine(); (一行一行讀取)
-                str.ReadToEnd();(一次讀取全部)
-                str.Close(); (關閉str)
-            */
-            
-        }
+        
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
@@ -441,7 +410,7 @@ namespace KinectFloor
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (this.wbmp != null)
+            //if (this.wbmp != null)
 
             {
                 // create a png bitmap encoder which knows how to save a .png file
@@ -456,7 +425,7 @@ namespace KinectFloor
                 string path = Path.Combine(myPhotos, "Upload" + ".png");
 
                 // FileStream is IDisposable
-
+            
                 using (FileStream fs = new FileStream(path, FileMode.Create))
                 {
                     encoder.Save(fs);
